@@ -12,10 +12,12 @@ parser.add_argument('--genome', metavar='G', type=str, nargs=1,
                    help='The annotated reference genome in gff3 format (filepath from pwd)')
 parser.add_argument('--distance', metavar='D', type=int, nargs=1, default=10,
                    help='Distance of kept feature to annotated features')
-parser.add_argument('--output_path', metavar='O', type=str, nargs=1,
-                   help='Path of the output files')
-parser.add_argument('--project_prefix', metavar='N', type=str, nargs=1,
-                   help='Project name, all output files will be prefixed with this')
+parser.add_argument('--output_path', metavar='O', type=str, nargs=1,default="./",
+                   help='Path of the output files [./]')
+parser.add_argument('--project_prefix', metavar='N', type=str, nargs=1,default="TIM",
+                   help='Project name, all output files will be prefixed with this [TIM]')
+parser.add_argument('--merge', metavar='M', type=str, nargs=1,default="yes",
+                   help='Should non-intersecting features be merged to the first feature of the merge? [yes]/no')
 
 args = parser.parse_args()
 assembly=args.assembly[0]
@@ -23,6 +25,7 @@ genome=args.genome[0]
 distance=args.distance[0]+1
 output=args.output_path[0]
 projectname=args.project_prefix[0]
+merge=args.merge[0]
 col_names = ['seqid', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attributes']
 
 #Read in gff files to be compared as pandas dataframes
@@ -125,27 +128,29 @@ intersecting_df.to_csv(output + projectname + "_intersecting_discarded.csv", sep
 del intersecting_df
 
 ####BEGIN MERGING ####
+if merge == "yes":
+    merge1 = non_intersecting_df
+    merge2 = non_intersecting_df
+    del non_intersecting_df
+    print("\nMerging remaining " + str(len(merge1.index)) + " Features")
+    merged_df = merge(merge1, merge2)
+    duplicates_merged = merged_df
+    duplicates_merged.to_csv(output + projectname + "_merged_with-duplicates.csv", sep='\t', index=False, header=False)
 
-merge1 = non_intersecting_df
-merge2 = non_intersecting_df
-del non_intersecting_df
-print("\nMerging remaining " + str(len(merge1.index)) + " Features")
-merged_df = merge(merge1, merge2)
-duplicates_merged = merged_df
-duplicates_merged.to_csv(output + projectname + "_merged_with-duplicates.csv", sep='\t', index=False, header=False)
+    merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
+    merged_df = merged_df.reset_index(drop=True)
+    print("\n" + str(len(merged_df.index)) + " Features remaining. Searching for duplicated Features...")
 
-merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
-merged_df = merged_df.reset_index(drop=True)
-print("\n" + str(len(merged_df.index)) + " Features remaining. Searching for duplicated Features...")
-
-merge1 = merged_df
-merge2 = merged_df
-merged_df = merge(merge1, merge2)
-del merge1
-del merge2
-merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
-merged_df = merged_df.reset_index(drop=True)
-merged_df = merged_df.sort_values(["start", "stop"], axis=0).reset_index(drop=True)
-merged_df.loc[merged_df['type'] != "exon", 'type'] = "exon"
-merged_df.to_csv(output + projectname + "_final_merged.gff", sep='\t', index=False, header=False)
-print("\nDone. " + str(len(merged_df.index)) + " Features remaining. Final output file was written to: " + output + projectname + "_final_merged.csv")
+    merge1 = merged_df
+    merge2 = merged_df
+    merged_df = merge(merge1, merge2)
+    del merge1
+    del merge2
+    merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
+    merged_df = merged_df.reset_index(drop=True)
+    merged_df = merged_df.sort_values(["start", "stop"], axis=0).reset_index(drop=True)
+    merged_df.loc[merged_df['type'] != "exon", 'type'] = "exon"
+    merged_df.to_csv(output + projectname + "_final_merged.gff", sep='\t', index=False, header=False)
+    print("\nDone. " + str(len(merged_df.index)) + " Features remaining. Final output file was written to: " + output + projectname + "_final_merged.csv")
+elif merge == "no":
+    print("\nDone. "

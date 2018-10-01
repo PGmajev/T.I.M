@@ -1,0 +1,7 @@
+Number of unique Features in Assembly File: 27393
+Number of unique Features in Genome File: 2592
+
+With default Parameters:
+Features left to be merged: 610
+Features left after merging: 274
+Features left after removal of duplicates: 264

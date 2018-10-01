@@ -6,26 +6,30 @@ import pandas as pd
 import sys
 
 parser = argparse.ArgumentParser(description='Input Files')
-parser.add_argument('--assembly', metavar='A', type=str, nargs=1,
+parser.add_argument('--assembly', metavar='A', required=True, type=str, nargs=1,
                    help='The mapped assembly in gtf format (filepath from pwd)')
-parser.add_argument('--genome', metavar='G', type=str, nargs=1,
+parser.add_argument('--genome', metavar='G', required=True, type=str, nargs=1,
                    help='The annotated reference genome in gff3 format (filepath from pwd)')
-parser.add_argument('--distance', metavar='D', type=int, nargs=1, default=10,
+parser.add_argument('--distance', metavar='D', default=["10"], type=int, nargs=1,
                    help='Distance of kept feature to annotated features')
-parser.add_argument('--output_path', metavar='O', type=str, nargs=1,
+parser.add_argument('--output_path', metavar='O', default=["./"], type=str, nargs=1,
                    help='Path of the output files')
-parser.add_argument('--project_prefix', metavar='N', type=str, nargs=1,
+parser.add_argument('--project_prefix', metavar='N', default=["TIM"], type=str, nargs=1,
                    help='Project name, all output files will be prefixed with this')
-parser.add_argument('--ss', metavar='N', type=int, nargs=1,default=0,
+parser.add_argument('--ss', metavar='N', default=["0"], type=int, nargs=1,
                    help='Should features only be excluded, if the intersection occurs on their strand? 1= Yes 0=No (Default:0)')
+parser.add_argument('--merge', metavar='M', default=["0"], type=int, nargs=1,
+                   help='Should non-intersecting features be merged to the first feature of the merge? 0= Yes 1=No (Default:0)')
 
 args = parser.parse_args()
 assembly=args.assembly[0]
 genome=args.genome[0]
-distance=args.distance[0]+1
-output=args.output_path[0]
-projectname=args.project_prefix[0]
-ss=args.ss[0]
+distance=int(args.distance[0])+1
+output=str(args.output_path[0])
+projectname=str(args.project_prefix[0])
+ss=int(args.ss[0])
+mergeyn=int(args.merge[0])
+
 col_names = ['seqid', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attributes']
 
 #Read in gff files to be compared as pandas dataframes
@@ -47,7 +51,7 @@ for index, row in df2.iterrows():
     size_calculation.add(row["stop"] - row["start"])
 longest_feature = max(size_calculation)
 
-print("Longest Feature (search radius is length + 200): " + str(longest_feature) +" bp")
+print("Longest Feature (search radius is length + 10): " + str(longest_feature) +" bp")
 
 def iterate_df2(df1,df2, df1_chrm, df1_range, df1_start, df1_stop, df1_row, intersecting_df, non_intersecting_df,longest_feature,ss):
     number_intersections = 0
@@ -55,8 +59,8 @@ def iterate_df2(df1,df2, df1_chrm, df1_range, df1_start, df1_stop, df1_row, inte
     if df1_start-longest_feature <=1:
         start_mod=0
     else:
-        start_mod=(df1_start-(longest_feature)) - 50
-    stop_mod=(df1_stop+(longest_feature)) + 50
+        start_mod=(df1_start-(longest_feature)) - 10
+    stop_mod=(df1_stop+(longest_feature)) + 10
     df2_slice = df2.loc[df2['start'] >= start_mod]
     df2_slice = df2_slice.loc[df2_slice['stop'] <= stop_mod]
     if ss == 1:
@@ -98,7 +102,7 @@ def merge(merge1, merge2):
     size_calculation_merge = set()
     for index, row in merge2.iterrows():
         size_calculation_merge.add(row["stop"] - row["start"])
-    longest_feature = max(size_calculation_merge) + 200
+    longest_feature = max(size_calculation_merge)
     del size_calculation_merge
     merged_df = pd.DataFrame(columns=merge1.columns, index=[])
     lenm1 = len(merge1.index)
@@ -113,8 +117,8 @@ def merge(merge1, merge2):
         if int(trans_start[0])-longest_feature <=0:
             start_mod=0
         else:
-            start_mod=(int(trans_start[0])-longest_feature) - 200
-        stop_mod=(int(trans_end[0])+longest_feature) + 200
+            start_mod=(int(trans_start[0])-longest_feature) - 10
+        stop_mod=(int(trans_end[0])+longest_feature) + 10
         merge2_slice = merge2.loc[merge2['start'] >= start_mod]
         merge2_slice = merge2_slice.loc[merge2_slice['stop'] <= stop_mod]
 #        print("Processing non-intersecting feature: " + str(trans_row+1) + "/" + str(lenm1))
@@ -161,26 +165,30 @@ intersecting_df.to_csv(output + projectname + "_intersecting_discarded.csv", sep
 del intersecting_df
 
 ####BEGIN MERGING ####
+if str(mergeyn) == "[0]" or str(mergeyn) == "0":
+    merge1 = non_intersecting_df
+    merge2 = non_intersecting_df
+    del non_intersecting_df
+    print("\nMerging remaining " + str(len(merge1.index)) + " Features.")
+    merged_df = merge(merge1, merge2)
+    duplicates_merged = merged_df
+    duplicates_merged.to_csv(output + projectname + "_merged_with-duplicates.csv", sep='\t', index=False, header=False)
 
-merge1 = non_intersecting_df
-merge2 = non_intersecting_df
-del non_intersecting_df
-print("\nMerging remaining " + str(len(merge1.index)) + " Features.")
-merged_df = merge(merge1, merge2)
-duplicates_merged = merged_df
-duplicates_merged.to_csv(output + projectname + "_merged_with-duplicates.csv", sep='\t', index=False, header=False)
+    merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
+    merged_df = merged_df.reset_index(drop=True)
+    print("\n" + str(len(merged_df.index)) + " Features remaining. Searching for duplicated Features...")
 
-merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
-merged_df = merged_df.reset_index(drop=True)
-print("\n" + str(len(merged_df.index)) + " Features remaining. Searching for duplicated Features...")
-
-merge1 = merged_df
-merge2 = merged_df
-merged_df = merge(merge1, merge2)
-del merge1
-del merge2
-merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
-merged_df = merged_df.reset_index(drop=True)
-merged_df = merged_df.sort_values(["start", "stop"], axis=0).reset_index(drop=True)
-merged_df.to_csv(output + projectname + "_final_merged.gff", sep='\t', index=False, header=False)
-print("\nDone. " + str(len(merged_df.index)) + " Features remaining. Final output file was written to: " + output + projectname + "_final_merged.gff")
+    merge1 = merged_df
+    merge2 = merged_df
+    merged_df = merge(merge1, merge2)
+    del merge1
+    del merge2
+    merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
+    merged_df = merged_df.reset_index(drop=True)
+    merged_df = merged_df.sort_values(["start", "stop"], axis=0).reset_index(drop=True)
+    merged_df.to_csv(output + projectname + "_final_merged.gff", sep='\t', index=False, header=False)
+    print("\nDone. " + str(len(merged_df.index)) + " Features remaining. Final output file was written to: " + output + projectname + "_final_merged.gff")
+elif str(mergeyn) == "[1]":
+    print("\nDone.")
+else:
+    print("Merge variable was not correctly loaded")
