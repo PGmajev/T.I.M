@@ -149,7 +149,7 @@ def merge(merge1, merge2):
 print("Number of unique Features in Assembly File: " + str(len(df1.index)))
 print("Number of unique Features in Genome File: " + str(len(df2.index)))
 
-#Iterate over RAD21 dataframe
+#Iterate over dataframe
 non_intersecting_df,intersecting_df = iterate_df1(df1,df2,distance,longest_feature,ss)
 del df1
 del df2
