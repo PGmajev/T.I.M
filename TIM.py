@@ -19,7 +19,7 @@ parser.add_argument('--project_prefix', metavar='N', default=["TIM"], type=str, 
 parser.add_argument('--ss', metavar='N', default=["0"], type=int, nargs=1,
                    help='Only consider intersects, if they occur on the same strand as the respective feature? 1= Yes 0=No (Default:0)')
 parser.add_argument('--merge', metavar='M', default=["0"], type=int, nargs=1,
-                   help='Should non-intersecting features be merged? 0= Yes 1=No (Default:0)')
+                   help='Should non-intersecting features be merged if they overlap? 0= Yes 1=No (Default:0)')
 
 args = parser.parse_args()
 assembly=args.assembly[0]
