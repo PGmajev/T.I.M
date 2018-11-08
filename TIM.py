@@ -17,9 +17,9 @@ parser.add_argument('--output_path', metavar='O', default=["./"], type=str, narg
 parser.add_argument('--project_prefix', metavar='N', default=["TIM"], type=str, nargs=1,
                    help='Project name, all output files will be prefixed with this')
 parser.add_argument('--ss', metavar='N', default=["0"], type=int, nargs=1,
-                   help='Should features only be excluded, if the intersection occurs on their strand? 1= Yes 0=No (Default:0)')
+                   help='Only consider intersects, if they occur atthe same strand of the respective feature? 1= Yes 0=No (Default:0)')
 parser.add_argument('--merge', metavar='M', default=["0"], type=int, nargs=1,
-                   help='Should non-intersecting features be merged to the first feature of the merge? 0= Yes 1=No (Default:0)')
+                   help='Should non-intersecting features be merged? 0= Yes 1=No (Default:0)')
 
 args = parser.parse_args()
 assembly=args.assembly[0]
