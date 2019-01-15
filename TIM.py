@@ -2,9 +2,8 @@
 import argparse
 import requests
 import pandas as pd
-#import numpy as np
 import sys
-
+#####Define Input Arguments#####
 parser = argparse.ArgumentParser(description='Input Files')
 parser.add_argument('--assembly', metavar='A', required=True, type=str, nargs=1,
                    help='The mapped assembly in gtf format (filepath from pwd)')
@@ -21,6 +20,7 @@ parser.add_argument('--ss', metavar='N', default=["0"], type=int, nargs=1,
 parser.add_argument('--merge', metavar='M', default=["0"], type=int, nargs=1,
                    help='Should non-intersecting features be merged if they overlap? 0= Yes 1=No (Default:0)')
 
+#####Load Input Arguments into variables#####
 args = parser.parse_args()
 assembly=args.assembly[0]
 genome=args.genome[0]
@@ -30,29 +30,31 @@ projectname=str(args.project_prefix[0])
 ss=int(args.ss[0])
 mergeyn=int(args.merge[0])
 
+#####Define Number and Names on Columns of the Input GFF Files#####
 col_names = ['seqid', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attributes']
 
-#Read in gff files to be compared as pandas dataframes
+#####Read in GFF File for the Assembly as pandas dataframe#####
 df1 = pd.read_csv(assembly, sep='\t', comment='#', low_memory=False, header=None, names=col_names)
 df1 = df1.sort_values(["strand", "start", "stop"], axis=0).reset_index(drop=True)
 df1 = df1.drop_duplicates(subset=["start", "stop", "strand"])
 df1 = df1.reset_index(drop=True)
 df1.loc[df1['type'] != "exon", 'type'] = "exon"
 
-
+#####Read in GFF File for the Genome as pandas dataframe#####
 df2 = pd.read_csv(genome, sep='\t', comment='#', low_memory=False, header=None, names=col_names)
 df2 = df2.sort_values(["strand", "start", "stop"], axis=0).reset_index(drop=True)
 df2 = df2.drop_duplicates(subset=["start", "stop", "strand"])
 df2 = df2.reset_index(drop=True)
 df2.loc[df2['type'] != "exon", 'type'] = "exon"
 
+#####Calculate the size of the largest feature in the Genome and output its size#####
 size_calculation = set()
 for index, row in df2.iterrows():
     size_calculation.add(row["stop"] - row["start"])
 longest_feature = max(size_calculation)
-
 print("Longest Feature (search radius is length + 10): " + str(longest_feature) +" bp")
 
+#####Iterate over all features in the Genome and determine, whether they overlap with features in the Assembly#####
 def iterate_df2(df1,df2, df1_chrm, df1_range, df1_start, df1_stop, df1_row, intersecting_df, non_intersecting_df,longest_feature,ss):
     number_intersections = 0
     intersection = set()
@@ -78,6 +80,7 @@ def iterate_df2(df1,df2, df1_chrm, df1_range, df1_start, df1_stop, df1_row, inte
             continue
     return number_intersections
 
+#####Iterate over every feature of the Assembly and compare to every feature in the Genome#####
 def iterate_df1(df1,df2,distance,longest_feature,ss):
     intersecting_df = pd.DataFrame(columns=df1.columns, index=[])
     non_intersecting_df = pd.DataFrame(columns=df1.columns, index=[])
@@ -97,7 +100,8 @@ def iterate_df1(df1,df2,distance,longest_feature,ss):
         elif int(number_intersections) == 1:
             intersecting_df = intersecting_df.append(df1.iloc[df1_row].copy())
     return non_intersecting_df, intersecting_df
-#Function to merge two Dataframes
+
+#####Function to merge two Dataframes#####
 def merge(merge1, merge2):
     size_calculation_merge = set()
     for index, row in merge2.iterrows():
@@ -144,15 +148,15 @@ def merge(merge1, merge2):
 
 
 
-#Create an empty dataframe for intersecting and nonintersecting reads each
-#Put out the lengths of the files read in
+#####Create an empty dataframe for intersecting and nonintersecting reads each and put out the lengths of the files read in#####
 print("Number of unique Features in Assembly File: " + str(len(df1.index)))
 print("Number of unique Features in Genome File: " + str(len(df2.index)))
 
-#Iterate over dataframe
+#####Iterate over dataframe#####
 non_intersecting_df,intersecting_df = iterate_df1(df1,df2,distance,longest_feature,ss)
 del df1
 del df2
+
 #Remove duplicates and save results as csv
 non_intersecting_df = non_intersecting_df.drop_duplicates(subset=["start", "stop", "strand", "attributes"])
 non_intersecting_df = non_intersecting_df.reset_index(drop=True)
