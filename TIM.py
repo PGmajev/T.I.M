@@ -51,7 +51,6 @@ df2 = df2.reset_index(drop=True)
 df2.loc[df2['type'] != "exon", 'type'] = "exon"
 
 
-
 #####Calculate the size of the largest feature in the Genome and output its size#####
 size_calculation = set()
 for index, row in df2.iterrows():
