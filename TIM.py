@@ -3,6 +3,8 @@ import argparse
 import requests
 import pandas as pd
 import sys
+import multiprocessing
+
 #####Define Input Arguments#####
 parser = argparse.ArgumentParser(description='Input Files')
 parser.add_argument('--assembly', metavar='A', required=True, type=str, nargs=1,
@@ -30,6 +32,7 @@ projectname=str(args.project_prefix[0])
 ss=int(args.ss[0])
 mergeyn=int(args.merge[0])
 
+
 #####Define Number and Names on Columns of the Input GFF Files#####
 col_names = ['seqid', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attributes']
 
@@ -47,12 +50,48 @@ df2 = df2.drop_duplicates(subset=["start", "stop", "strand"])
 df2 = df2.reset_index(drop=True)
 df2.loc[df2['type'] != "exon", 'type'] = "exon"
 
+#####MULTICORE#####
+num_processes = multiprocessing.cpu_count()
+
+# calculate the chunk size as an integer
+chunk_size = int(df1.shape[0]/num_processes)
+
+# this solution was reworked from the above link.
+# will work even if the length of the dataframe is not evenly divisible by num_processes
+chunks = [df1.ix[df1.index[i:i + chunk_size]] for i in range(0, df1.shape[0], chunk_size)]
+pool = multiprocessing.Pool(processes=num_processes)
+
+# apply our function to each chunk in the list
+#result = pool.map(iterate_df1, chunks)
+
 #####Calculate the size of the largest feature in the Genome and output its size#####
 size_calculation = set()
 for index, row in df2.iterrows():
     size_calculation.add(row["stop"] - row["start"])
 longest_feature = max(size_calculation)
 print("Longest Feature (search radius is length + 10): " + str(longest_feature) +" bp")
+
+#####Iterate over every feature of the Assembly and compare to every feature in the Genome#####
+def iterate_df1(df1,df2,distance,longest_feature,ss):
+    intersecting_df = pd.DataFrame(columns=df1.columns, index=[])
+    non_intersecting_df = pd.DataFrame(columns=df1.columns, index=[])
+    for index, row in df1.iterrows():
+        sys.stdout.write('\r' + "Processing Assembly Row: " + str(row.name+1) + "/" + str(len(df1.index)))
+        sys.stdout.flush()
+#Create a range of the start and end point of the feature
+        #df1_range = range(row["start"] - distance,row["stop"] + distance)
+        #df1_start = row["start"]
+        #df1_stop = row["stop"]
+        #df1_row = row.name
+        #df1_chrm = row["strand"]
+#Create Dataset for intersections and iterate over df1 Dataframe
+        number_intersections = iterate_df2(df1,df2, row["strand"], range(row["start"] - distance,row["stop"] + distance), row["start"], row["stop"], row.name, intersecting_df, non_intersecting_df,longest_feature,ss)
+        if int(number_intersections) == 0:
+            non_intersecting_df = non_intersecting_df.append(df1.iloc[row.name].copy())
+        elif int(number_intersections) == 1:
+            intersecting_df = intersecting_df.append(df1.iloc[row.name].copy())
+    return non_intersecting_df, intersecting_df
+
 
 #####Iterate over all features in the Genome and determine, whether they overlap with features in the Assembly#####
 def iterate_df2(df1,df2, df1_chrm, df1_range, df1_start, df1_stop, df1_row, intersecting_df, non_intersecting_df,longest_feature,ss):
@@ -70,36 +109,15 @@ def iterate_df2(df1,df2, df1_chrm, df1_range, df1_start, df1_stop, df1_row, inte
     for index, row in df2_slice.iterrows():
         df2_chrm = row["strand"]
 #Only compare, if the two reads are on the same chromosome
-        df2_range = range(row["start"],row["stop"])
+#        df2_range = range(row["start"],row["stop"])
         xs = set(df1_range)
-        intersection = intersection.union(xs.intersection(df2_range))
+        intersection = intersection.union(xs.intersection(range(row["start"],row["stop"])))
         if intersection:
             number_intersections = 1
             return number_intersections
         else:
             continue
     return number_intersections
-
-#####Iterate over every feature of the Assembly and compare to every feature in the Genome#####
-def iterate_df1(df1,df2,distance,longest_feature,ss):
-    intersecting_df = pd.DataFrame(columns=df1.columns, index=[])
-    non_intersecting_df = pd.DataFrame(columns=df1.columns, index=[])
-    for index, row in df1.iterrows():
-        sys.stdout.write('\r' + "Processing Assembly Row: " + str(row.name+1) + "/" + str(len(df1.index)))
-        sys.stdout.flush()
-#Create a range of the start and end point of the feature
-        df1_range = range(row["start"] - distance,row["stop"] + distance)
-        df1_start = row["start"]
-        df1_stop = row["stop"]
-        df1_row = row.name
-        df1_chrm = row["strand"]
-#Create Dataset for intersections and iterate over df1 Dataframe
-        number_intersections = iterate_df2(df1,df2, df1_chrm, df1_range, df1_start, df1_stop, df1_row, intersecting_df, non_intersecting_df,longest_feature,ss)
-        if int(number_intersections) == 0:
-            non_intersecting_df = non_intersecting_df.append(df1.iloc[df1_row].copy())
-        elif int(number_intersections) == 1:
-            intersecting_df = intersecting_df.append(df1.iloc[df1_row].copy())
-    return non_intersecting_df, intersecting_df
 
 #####Function to merge two Dataframes#####
 def merge(merge1, merge2):
@@ -170,11 +188,8 @@ del intersecting_df
 
 ####BEGIN MERGING ####
 if str(mergeyn) == "[0]" or str(mergeyn) == "0":
-    merge1 = non_intersecting_df
-    merge2 = non_intersecting_df
-    del non_intersecting_df
-    print("\nMerging remaining " + str(len(merge1.index)) + " Features.")
-    merged_df = merge(merge1, merge2)
+    print("\nMerging remaining " + str(len(non_intersecting_df.index)) + " Features.")
+    merged_df = merge(non_intersecting_df, non_intersecting_df)
     duplicates_merged = merged_df
     duplicates_merged.to_csv(output + projectname + "_merged_with-duplicates.csv", sep='\t', index=False, header=False)
 
@@ -182,11 +197,8 @@ if str(mergeyn) == "[0]" or str(mergeyn) == "0":
     merged_df = merged_df.reset_index(drop=True)
     print("\n" + str(len(merged_df.index)) + " Features remaining. Searching for duplicated Features...")
 
-    merge1 = merged_df
-    merge2 = merged_df
-    merged_df = merge(merge1, merge2)
-    del merge1
-    del merge2
+
+    merged_df = merge(merged_df, merged_df)
     merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
     merged_df = merged_df.reset_index(drop=True)
     merged_df = merged_df.sort_values(["start", "stop"], axis=0).reset_index(drop=True)
