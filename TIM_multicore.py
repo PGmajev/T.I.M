@@ -50,6 +50,18 @@ df2 = df2.drop_duplicates(subset=["start", "stop", "strand"])
 df2 = df2.reset_index(drop=True)
 df2.loc[df2['type'] != "exon", 'type'] = "exon"
 
+#####MULTICORE#####
+num_processes = multiprocessing.cpu_count()
+
+# calculate the chunk size as an integer
+chunk_size = int(df1.shape[0]/num_processes)
+
+# this solution was reworked from the above link.
+# will work even if the length of the dataframe is not evenly divisible by num_processes
+chunks = [df1.ix[df1.index[i:i + chunk_size]] for i in range(0, df1.shape[0], chunk_size)]
+pool = multiprocessing.Pool(processes=num_processes)
+
+# apply our function to each chunk in the list
 
 
 #####Calculate the size of the largest feature in the Genome and output its size#####
@@ -159,40 +171,6 @@ print("Number of unique Features in Assembly File: " + str(len(df1.index)))
 print("Number of unique Features in Genome File: " + str(len(df2.index)))
 
 #####Iterate over dataframe#####
-non_intersecting_df,intersecting_df = iterate_df1(df1,df2,distance,longest_feature,ss)
-del df1
-del df2
+result = pool.map(iterate_df1, chunks)
 
-#Remove duplicates and save results as csv
-non_intersecting_df = non_intersecting_df.drop_duplicates(subset=["start", "stop", "strand", "attributes"])
-non_intersecting_df = non_intersecting_df.reset_index(drop=True)
-intersecting_df = intersecting_df.drop_duplicates(subset=["start", "stop", "strand", "attributes"])
-intersecting_df = intersecting_df.reset_index(drop=True)
-intersecting_df = intersecting_df.sort_values(["start", "stop"], axis=0).reset_index(drop=True)
-non_intersecting_df = non_intersecting_df.sort_values(["start", "stop"], axis=0).reset_index(drop=True)
-non_intersecting_df.to_csv(output + projectname + "non-intersecting.csv", sep='\t', index=False, header=False)
-intersecting_df.to_csv(output + projectname + "_intersecting_discarded.csv", sep='\t', index=False, header=False)
-del intersecting_df
-
-####BEGIN MERGING ####
-if str(mergeyn) == "[0]" or str(mergeyn) == "0":
-    print("\nMerging remaining " + str(len(non_intersecting_df.index)) + " Features.")
-    merged_df = merge(non_intersecting_df, non_intersecting_df)
-    duplicates_merged = merged_df
-    duplicates_merged.to_csv(output + projectname + "_merged_with-duplicates.csv", sep='\t', index=False, header=False)
-
-    merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
-    merged_df = merged_df.reset_index(drop=True)
-    print("\n" + str(len(merged_df.index)) + " Features remaining. Searching for duplicated Features...")
-
-
-    merged_df = merge(merged_df, merged_df)
-    merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
-    merged_df = merged_df.reset_index(drop=True)
-    merged_df = merged_df.sort_values(["start", "stop"], axis=0).reset_index(drop=True)
-    merged_df.to_csv(output + projectname + "_final_merged.gff", sep='\t', index=False, header=False)
-    print("\nDone. " + str(len(merged_df.index)) + " Features remaining. Final output file was written to: " + output + projectname + "_final_merged.gff")
-elif str(mergeyn) == "[1]":
-    print("\nDone.")
-else:
-    print("Merge variable was not correctly loaded")
+print (result)
