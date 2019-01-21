@@ -3,7 +3,6 @@ import argparse
 import requests
 import pandas as pd
 import sys
-import multiprocessing
 
 #####Define Input Arguments#####
 parser = argparse.ArgumentParser(description='Input Files')
@@ -89,7 +88,6 @@ def iterate_df2(df1,df2, df1_chrm, df1_range, df1_start, df1_stop, df1_row, inte
     for index, row in df2_slice.iterrows():
         df2_chrm = row["strand"]
 #Only compare, if the two reads are on the same chromosome
-#        df2_range = range(row["start"],row["stop"])
         xs = set(df1_range)
         intersection = intersection.union(xs.intersection(range(row["start"],row["stop"])))
         if intersection:
@@ -123,7 +121,6 @@ def merge(merge1, merge2):
         stop_mod=(int(trans_end[0])+longest_feature) + 10
         merge2_slice = merge2.loc[merge2['start'] >= start_mod]
         merge2_slice = merge2_slice.loc[merge2_slice['stop'] <= stop_mod]
-#        print("Processing non-intersecting feature: " + str(trans_row+1) + "/" + str(lenm1))
         for index, row in merge2_slice.iterrows():
             gene_strand=row["strand"]
             if gene_strand == trans_strand:
@@ -132,14 +129,10 @@ def merge(merge1, merge2):
                 intersection = set()
                 intersection=xs.intersection(gene_range)
                 if intersection:
-#                    print("Inside for loop: " + str(trans_start))
                     trans_start.append(row["start"])
                     trans_end.append(row["stop"])
                     del intersection
-#        merge1.set_value(trans_row, "start", min(trans_start))
         merge1.at[trans_row, "start"] = min(trans_start)
-#        print("Outside for loop: " + str(trans_start))
-#        merge1.set_value(trans_row, "stop", max(trans_end))
         merge1.at[trans_row, "stop"] = max(trans_end)
         merged_df = merged_df.append(merge1.iloc[trans_row].copy())
     return merged_df
@@ -172,12 +165,9 @@ if str(mergeyn) == "[0]" or str(mergeyn) == "0":
     merged_df = merge(non_intersecting_df, non_intersecting_df)
     duplicates_merged = merged_df
     duplicates_merged.to_csv(output + projectname + "_merged_with-duplicates.csv", sep='\t', index=False, header=False)
-
     merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
     merged_df = merged_df.reset_index(drop=True)
     print("\n" + str(len(merged_df.index)) + " Features remaining. Searching for duplicated Features...")
-
-
     merged_df = merge(merged_df, merged_df)
     merged_df = merged_df.drop_duplicates(subset=["start", "stop", "strand"])
     merged_df = merged_df.reset_index(drop=True)
