@@ -10,5 +10,5 @@
   --distance D        Distance of kept feature to annotated features<br />
   --merge M           Should non-intersecting features be merged to the first feature of the merge? 0= Yes 1=No (Default:0)<br />
 <br />
-Example Command: python3 TIM_multicore.py --assembly test_data/Trinity80nt_assembly.gff3 --genome test_data/Genome.gff3 --distance 10
+Example Command: python3 TIM.py --assembly test_data/Trinity80nt_assembly.gff3 --genome test_data/Genome.gff3 --distance 10
 

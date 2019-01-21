@@ -65,13 +65,6 @@ def iterate_df1(df1,df2,distance,longest_feature,ss):
     for index, row in df1.iterrows():
         sys.stdout.write('\r' + "Processing Assembly Row: " + str(row.name+1) + "/" + str(len(df1.index)))
         sys.stdout.flush()
-#Create a range of the start and end point of the feature
-        #df1_range = range(row["start"] - distance,row["stop"] + distance)
-        #df1_start = row["start"]
-        #df1_stop = row["stop"]
-        #df1_row = row.name
-        #df1_chrm = row["strand"]
-#Create Dataset for intersections and iterate over df1 Dataframe
         number_intersections = iterate_df2(df1,df2, row["strand"], range(row["start"] - distance,row["stop"] + distance), row["start"], row["stop"], row.name, intersecting_df, non_intersecting_df,longest_feature,ss)
         if int(number_intersections) == 0:
             non_intersecting_df = non_intersecting_df.append(df1.iloc[row.name].copy())
