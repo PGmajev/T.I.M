@@ -10,6 +10,6 @@
   --distance D        Distance of kept feature to annotated features<br />
   --merge M           Should non-intersecting features be merged to the first feature of the merge? 0= Yes 1=No (Default:0)<br />
 <br />
-Example Command: python3 TIM.py --assembly test_data/Trinity80nt_assembly.gff3 --genome test_data/Genome.gff3 --distance 10<br />
+Example Command: python3 TIM.py --assembly test_data/Assembly.gff3 --genome test_data/Genome.gff3 --distance 10<br />
 <br />
 The Input Files have to be gff3 files with the following column order: 'seqid', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attributes'. The names and order may be changed in line 37 of the TIM.py script. Start, Stop and Strand are hardcoded into the script and have to be existent in the input files!
