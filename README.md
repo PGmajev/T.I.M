@@ -12,4 +12,6 @@
 <br />
 Example Command: python3 TIM.py --assembly test_data/Assembly.gff3 --genome test_data/Genome.gff3 --distance 10<br />
 <br />
-The Input Files have to be gff3 files with the following column order: 'seqid', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attributes'. The names and order may be changed in line 37 of the TIM.py script. Start, Stop and Strand are hardcoded into the script and have to be existent in the input files!
+The Input Files have to be gff3 files with the following column order: 'seqid', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attributes'. The names and order may be changed in line 37 of the TIM.py script. <br />
+<br />
+Start, Stop and Strand are hardcoded into the script and have to be existent in the input files. The same applies for the features. For them, mRNA has to be set as type.
