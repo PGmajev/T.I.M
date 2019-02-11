@@ -1,6 +1,6 @@
-__all__ = ["assembly","genome", "intersect", "merge"]
+__all__ = ["Assembly","Genome","export", "IntersTable"]
 
-from .assembly import assembly
-from .genome import genome
-from .intersect import intersect
-from .merge import merge
+from .assembly import Assembly
+from .genome import Genome
+from .intersectiontable import IntersTable
+from .export import export

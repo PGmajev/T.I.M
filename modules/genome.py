@@ -4,13 +4,12 @@ import sys
 import csv
 import time
 
-class genome():
+class Genome():
     def __init__(self):
         self.df = pd.DataFrame()
 
-    def load_genome(self, genome_path):
+    def load_genome(self, genome_path, col_names):
         start_time = time.time()
-        col_names = ['seqid', 'source', 'type', 'start', 'stop', 'score', 'strand', 'phase', 'attributes']
         df = pd.read_csv(genome_path, sep='\t', comment='#', low_memory=False, header=None, names=col_names)
         df = df.sort_values(["strand", "start", "stop"], axis=0).reset_index(drop=True)
         df = df.drop_duplicates(subset=["start", "stop", "strand"])
@@ -38,7 +37,7 @@ class genome():
 #        intersect.df[row["strand"]] = df.apply(lambda row: (row['start']))
 #        intersection_places.append(range(row['start'], row['stop'])
 #        self.df['intersections'] = self.df.apply(lambda row: (list(range(row['start'], row['stop']))), axis=1)
-        print("Finished calculating intersections in "+ str((time.time() - start_time)*1000) + " milliseconds")
+        print("Finished calculating intersections in "+ str((time.time() - start_time)*1000) + " milliseconds. \nStarting Intersection Analysis...")
 
         return strand_pos, strand_neg
 
