@@ -66,7 +66,7 @@ elif ss == 1:
 else:
     print("Incompatible parameter given!")
 
-time.sleep(0.1)
+
 print(f"\nNumber of non-intersecting features found: {str(len(inters.non_intersecting))}")
 print(f"\nIntersection Analysis concluded within {str((time.time() - total_start_time))} seconds. \nStarting with feature merging...")
 

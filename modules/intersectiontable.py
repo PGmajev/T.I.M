@@ -29,11 +29,10 @@ class IntersTable():
             else:
                 self.intersecting.append((row['seqid'], row['source'], row['type'], row['start'], row['stop'], row['score'], row['strand'], row['phase'], row['attributes']))
                 continue
-
-        bar.finish()
-
-
+        time.sleep(0.1)
         return self
+
+
 
     def intersect_ss(self, assembly, distance):
         self.intersecting = []
@@ -52,10 +51,10 @@ class IntersTable():
 
             else:
                 self.intersecting.append((row['seqid'], row['source'], row['type'], row['start'], row['stop'], row['score'], row['strand'], row['phase'], row['attributes']))
-
-        bar.finish()
-
+        time.sleep(0.1)
         return self
+
+
 
     def merge(self):
         self.occup_pos = set()
@@ -82,6 +81,7 @@ class IntersTable():
             i += 1
         self.merged_final = self.merged_pos
         self.merged_final.extend(self.merged_neg)
+        return self
 
 
 
