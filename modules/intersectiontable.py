@@ -16,6 +16,8 @@ class IntersTable():
         self.non_intersecting = []
 
         for index, row in assembly.df.iterrows():
+            sys.stdout.write('\r' + "Processing Assembly Row: " + str(row.name+1) + "/" + str(len(assembly.df.index)))
+            sys.stdout.flush()
             intersection = set()
             xs = set(range(row["start"] - distance, row["stop"] + distance))
             if not intersection.union(xs.intersection(self.neg)) and not intersection.union(xs.intersection(self.pos)):
@@ -34,6 +36,8 @@ class IntersTable():
         self.intersecting = []
         self.non_intersecting = []
         for index, row in assembly.df.iterrows():
+            sys.stdout.write('\r' + "Processing Assembly Row: " + str(row.name+1) + "/" + str(len(assembly.df.index)))
+            sys.stdout.flush()
             intersection = set()
             xs = set(range(row["start"] - distance, row["stop"] + distance))
             if row["strand"] == "+" and not intersection.union(xs.intersection(self.pos)):

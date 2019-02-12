@@ -54,7 +54,7 @@ geno = Genome()
 geno = geno.load_genome(genome_path, col_names)
 
 
-#####Calculate all genomic positions occupied by annotations in the Genome#####
+#####Calculate all genomic positions occupied by annotations in the Genome for each strand#####
 strand_pos, strand_neg = geno.calc_intersect()
 
 ###Look for intersections between the assembly and the genome annotation#####
