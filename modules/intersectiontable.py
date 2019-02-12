@@ -4,6 +4,9 @@ import sys
 import csv
 import time
 import more_itertools as mit
+import progressbar
+import functools
+import random
 
 class IntersTable():
     def __init__(self, strand_pos, strand_neg):
@@ -14,10 +17,8 @@ class IntersTable():
     def intersect_ns(self, assembly, distance):
         self.intersecting = []
         self.non_intersecting = []
-
-        for index, row in assembly.df.iterrows():
-            sys.stdout.write('\r' + "Processing Assembly Row: " + str(row.name+1) + "/" + str(len(assembly.df.index)))
-            sys.stdout.flush()
+        bar = progressbar.ProgressBar(max_value=len(assembly.df.index)).start()
+        for index, row in bar(assembly.df.iterrows()):
             intersection = set()
             xs = set(range(row["start"] - distance, row["stop"] + distance))
             if not intersection.union(xs.intersection(self.neg)) and not intersection.union(xs.intersection(self.pos)):
@@ -29,13 +30,16 @@ class IntersTable():
                 self.intersecting.append((row['seqid'], row['source'], row['type'], row['start'], row['stop'], row['score'], row['strand'], row['phase'], row['attributes']))
                 continue
 
+        bar.finish()
+
 
         return self
 
     def intersect_ss(self, assembly, distance):
         self.intersecting = []
         self.non_intersecting = []
-        for index, row in assembly.df.iterrows():
+        bar = progressbar.ProgressBar(max_value=len(assembly.df.index)).start()
+        for index, row in bar(assembly.df.iterrows()):
             sys.stdout.write('\r' + "Processing Assembly Row: " + str(row.name+1) + "/" + str(len(assembly.df.index)))
             sys.stdout.flush()
             intersection = set()
@@ -48,6 +52,8 @@ class IntersTable():
 
             else:
                 self.intersecting.append((row['seqid'], row['source'], row['type'], row['start'], row['stop'], row['score'], row['strand'], row['phase'], row['attributes']))
+
+        bar.finish()
 
         return self
 

@@ -66,8 +66,9 @@ elif ss == 1:
 else:
     print("Incompatible parameter given!")
 
-print("\nNumber of non-intersecting features found: " + str(len(inters.non_intersecting)))
-print("\nIntersection Analysis concluded within "+ str((time.time() - total_start_time)) + " seconds. \nStarting with feature merging...")
+time.sleep(0.1)
+print(f"\nNumber of non-intersecting features found: {str(len(inters.non_intersecting))}")
+print(f"\nIntersection Analysis concluded within {str((time.time() - total_start_time))} seconds. \nStarting with feature merging...")
 
 #####Merge remaining features#####
 if mergeyn == 0:
@@ -76,7 +77,7 @@ else:
     pass
 
 print("\nNumber of newly merged features: " + str(len(inters.merged_final)))
-print("\nMerging concluded within "+ str((time.time() - total_start_time)) + " seconds. \nStarting with data export...")
+print(f"\nMerging concluded within {str((time.time() - total_start_time))} seconds. \nStarting with data export...")
 
 
 #####Exporting all non-intersecting features premerging#####
@@ -88,6 +89,7 @@ export(inters.intersecting, output, projectname,"intersecting_discarded.tsv")
 #####Outputing newly created features from merges#####
 export(inters.merged_final, output, projectname,"newly_merged_features.tsv")
 
-print("\nTotal Analysis concluded within "+ str((time.time() - total_start_time)) + " seconds. Good Bye!")
+print(f"\nTotal Analysis concluded within {str((time.time() - total_start_time))} seconds. Good Bye!")
+
 
 
