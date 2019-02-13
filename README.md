@@ -1,4 +1,4 @@
-Transcript Intersect & Merge, or T.I.M for short, is a tool to discover IGRs (InterGenic Regions) in Bacteria. It uses a transcriptome assembly mapped to a reference genome and the annotation of said genome to find features in the transcriptome assembly not found in and not intersecting with annotations in the reference genome.
+**Transcript Intersect & Merge**, or T.I.M for short, is a tool to discover IGRs (InterGenic Regions) in Bacteria. It uses a transcriptome assembly mapped to a reference genome and the annotation of said genome to find features in the transcriptome assembly not found in and not intersecting with annotations in the reference genome.<br />
 <br />
 **Needed Arguments**:<br />
   --assembly A        The mapped assembly in gff format (filepath from pwd or absolute)<br />
