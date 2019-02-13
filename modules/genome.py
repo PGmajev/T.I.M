@@ -16,7 +16,7 @@ class Genome():
         df = df.reset_index(drop=True)
         df.loc[df['type'] != "exon", 'type'] = "exon"
         self.df = df
-        print(f"Finished reading in Genome in {(time.time() - start_time) * 1000} milliseconds.\nFound {len(self.df.index)} Features in Genome")
+        print(f"Finished reading in Genome in {(time.time() - start_time) * 1000} milliseconds.\nFound {len(self.df.index)} Features in Genome\n")
         return self
 
     def calc_intersect(self):
