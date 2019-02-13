@@ -15,5 +15,5 @@ class Assembly():
         df = df.reset_index(drop=True)
         df.loc[df['type'] != "exon", 'type'] = "exon"
         self.df = df
-        print("Finished reading in Assembly in " + str((time.time() - start_time) * 1000) + " milliseconds")
+        print(f"Finished reading in Assembly in {(time.time() - start_time) * 1000} milliseconds.\nFound {len(self.df.index)} Features in Assembly")
         return self
