@@ -76,7 +76,7 @@ if mergeyn == 0:
 else:
     pass
 
-print("\nNumber of newly merged features: " + str(len(inters.merged_final)))
+print(f"\nNumber of newly merged features: {len(inters.merged_final)}")
 print(f"\nMerging concluded within {str((time.time() - total_start_time))} seconds. \nStarting with data export...")
 
 

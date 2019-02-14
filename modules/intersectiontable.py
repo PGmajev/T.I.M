@@ -71,12 +71,12 @@ class IntersTable():
         i = 1
         for group in mit.consecutive_groups(sorted(self.occup_pos)):
             intermediate = list(group)
-            self.merged_pos.append(["---", "TIM_Analysis", "exon", min(intermediate), max(intermediate), "0","+",".","IGT_"+str(i)])
+            self.merged_pos.append(["IGT_" + str(i), "TIM_Analysis", "exon", min(intermediate), max(intermediate), "0","+",".","IGT_"+str(i)])
             i+=1
 
         for group in mit.consecutive_groups(sorted(self.occup_neg)):
             intermediate = list(group)
-            self.merged_neg.append(["---", "TIM_Analysis", "exon", min(intermediate), max(intermediate), "0", "-", ".", "IGT_" + str(i)])
+            self.merged_neg.append(["IGT_" + str(i), "TIM_Analysis", "exon", min(intermediate), max(intermediate), "0", "-", ".", "IGT_" + str(i)])
             i += 1
         self.merged_final = self.merged_pos
         self.merged_final.extend(self.merged_neg)
